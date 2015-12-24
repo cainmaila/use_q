@@ -25,7 +25,7 @@ fs_readFile('myfile.txt').then(console.log, console.error);
 fs_readFile('package.json').then(console.log, console.error);
 
 var readFile = Q.nfbind(fs.readFile);
-readFile("package.json", "utf-8").done(function (text) {
+readFile("packagexx.json", "utf-8").done(function (text) {
     console.log("nfbind : ",text);
 });
 
