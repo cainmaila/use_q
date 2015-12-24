@@ -1,4 +1,4 @@
-# Q 实现Promise – Callbacks之外的另一种选择
+# Q 實現Promise – 脫離Callbacks地獄
 
 ### 用法
 
@@ -85,6 +85,68 @@ function getAnFunction(my_message) {
 ```
 * **promise.fcall ( args.. )** 返回Function並執行，參數方法跟call一樣
 
+### Promise的陣列方法
+
+* **promise.all()** 陣列中各Promise執行回覆後，才會繼續後面的done，回傳的是陣列，要注意的是其中有error整個就算錯誤
+```javascript
+var readFile = Q.nfbind(fs.readFile);
+Q.all([readFile('package.json'), Q.delay(2000)]).done(console.log);
+```
+
+* **promise.spread ( onFulfilled, onRejected )** 會把all的回傳的陣列拆成參數，要注意的是有其中有error整個就算錯誤
+```javascript
+var readFile = Q.nfbind(fs.readFile);
+Q.all([readFile('package.json'), Q.delay(2000)]).spread(function (diskVal, cloudVal) {
+        assert(diskVal === cloudVal);
+},console.error).done();
+```
+
+* **promise.allSettled ( )** 不管是否有錯誤，都會進下一串
+```javascript
+var readFile = Q.nfbind(fs.readFile);
+readFile('packageX.json')]).spread(function (disk, cloud) {
+    console.log("saved to disk:", disk.state === "fulfilled");
+    console.log("saved to cloud:", cloud.state === "fulfilled");
+}).done();
+```
+以上可以參考 app6.js
+
+### 其他工具方法
+
+* **promise.thenResolve( value )** 語法糖，類似以下作用
+```javascript
+promise.then(function () { return value; });
+```
+* **promise.thenReject(reason)** 語法糖，類似以下作用
+```javascript
+promise.then(function () { throw reason; })
+```
+* **promise.tap(onFulfilled)** 類似 middleware 概念，處理完後會把上一個 return 繼續傳下去
+```javascript
+Q("Hello, World!")
+.delay(1000)
+.tap(console.log) //這裡不須 return
+.then(function (message) {
+    expect(message).toBe("Hello, World!");
+})
+```
+* **promise.timeout ( ms, message )** 逾時處理，message會是超過時錯誤訊息，沒有定義會有預設值"Timed out after " + ms + " ms"
+```javascript
+promise.timeout(10000).then(
+  function (result) {
+    // 回傳完成執行
+    console.log(result);
+  },
+  function (err) {
+    // 失敗或逾時實行
+    console.log(err);
+  }
+);
+```
+* **promise.delay(ms)** 就 delay 沒什麼好說的XD
+```javascript
+Q.delay(150).then(doSomething);
+```
 ### 參考文
 
 [Github](https://github.com/kriskowal/q)

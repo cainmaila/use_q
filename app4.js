@@ -14,7 +14,6 @@ readFile("package.json", "utf-8")
     .get("version") //取出version的值
     .then(console.log); //印出
 
-
 //Promise.post(callFun,[key..]) 取出function再繼續run
 var delay_ob = Q.delay(500);
 delay_ob.then(function () {
