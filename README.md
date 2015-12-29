@@ -188,6 +188,53 @@ Q.delay(1000).done(function () { //一段時間後看看readFile3_load的狀態
 })
 ```
 
+### 自定義 Promise
+* **Q.defer()**
+
+返回一個自己定義的Promise物件，有下列方法
+```
+//property
+promise 
+
+//method
+resolve(value)  //回傳值  
+reject(reason)    //失敗與失敗物件訊息
+notify(value)    // onProgress 訊息
+makeNodeResolver()
+```
+DEMO => app8.js
+```javascript
+ar Q = require('q');
+var deferred = Q.defer(); //自定義
+deferred.promise.then(run_end, run_error, onProgress); //設定 return
+setTimeout(function() {
+    deferred.notify(30); //onProgress
+}, 100);
+setTimeout(function() {
+    deferred.notify(80); //onProgress
+}, 200);
+setTimeout(function() {
+    deferred.notify(100); //onProgress
+    // deferred.reject(new Error("error!!")); //error
+    deferred.resolve("ok!"); //成功
+}, 300);
+
+function onProgress(value) {
+    console.log("notify 進行中! " + value, deferred.promise);
+}
+
+function run_end(value) {
+    console.log("resolve 成功! " + value, deferred.promise);
+}
+
+function run_error(error) {
+    console.log("reject 錯誤! ", deferred.promise);
+    console.error(error);
+}
+```
+
+
+
 ### 參考文
 
 [Github](https://github.com/kriskowal/q)
