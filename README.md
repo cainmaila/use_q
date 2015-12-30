@@ -233,7 +233,155 @@ function run_error(error) {
 }
 ```
 
+* ***Q object***
 
+***Q ( value )***
+
+如果 value 是一個 Q promise 的話，就 return 一個 promise<br>
+如果 value 是一個 promise ( 但是不是 Q )，就轉成一個 Q promise<br>
+如果 value只是一個 值 ，就 return 一個狀態已經完成的 promise 並帶回 value
+
+***Q.reject ( reason )***
+
+return 一個狀態為 rejected ( 失敗 ) 的 promise ， 並帶回 reason (錯誤訊息)
+
+***Q.Promise ( resolver )***
+
+代入一個 function ， return 一個 prmise ，如果有例外錯誤就會呼叫 rejected ( 失敗 )
+
+DEMO => app9.js
+
+```javascript
+//How to use Q object
+var Q = require('q');
+// Q ( value )
+var promise_1 = Q.delay(1000).then(log_message);
+Q(promise_1).then(console.log,console.error);
+Q("cain").then(console.log,console.error);
+
+//Q.reject(reason)
+Q.reject(new Error("my error!")).then(console.log,console.error);
+
+// Q.Promise ( resolver )
+Q.Promise(function () {
+    console.log("run init!!");
+    // throw new Error("my error!");
+    return "ok!";
+}).then(console.log,console.error);
+
+function log_message(value) {
+    if (!value) {
+        value = "no return";
+    }
+    console.log(value);
+}
+```
+
+### Node.js 的 Promise
+
+套用 Q 介面的 nodejs ， 必須符合 return 一個 funtion 並帶有 ```(err, result)``` 例如 fs.readFile 等等
+
+* **Q.nfbind(nodeFunc, ...args)** or **Q.denodeify**
+
+綁定 FS.readFile 成為一個 Promise
+```javascript
+var readFile = Q.nfbind(FS.readFile);
+readFile("foo.txt", "utf-8").done(function (text) {
+
+});
+```
+使用 bind 綁定 ( 下一件事有用到 this 不然 this 會是 Promise )
+```javascript
+var Kitty = mongoose.model("Kitty");
+var findKitties = Q.nfbind(Kitty.find.bind(Kitty));
+```
+* **Q.nbind(nodeMethod, thisArg, ...args)**
+
+綁定帶 ```this```
+```javascript
+var Kitty = mongoose.model("Kitty");
+var findKitties = Q.nbind(Kitty.find, Kitty);
+
+findKitties({ cute: true }).done(function (theKitties) {
+
+});
+```
+* **Q.nfapply(nodeFunc, args)**
+
+綁定帶參數，參數認列如 apply 用法
+```javascript
+Q.nfapply(FS.readFile, ["foo.txt", "utf-8"]).done(function (text) {
+});
+```
+綁定帶參數，參數且 bind 一個物件進去
+```javascript
+Q.nfapply(redisClient.get.bind(redisClient), ["user:1:id"]).done(function (user) {
+});
+```
+* **Q.nfcall(func, ...args)**
+
+綁定帶參數，參數認列如 call 用法 ( 建議用 ```Q.ninvoke``` )
+```javascript
+Q.nfcall(FS.readFile, "foo.txt", "utf-8").done(function (text) {
+});
+```
+* **Q.npost(object, methodName, args)**
+
+調用物件中的方法 ， 可帶參數陣列
+```javascript
+Q.npost(redisClient, "get", ["user:1:id"]).done(function (user) {
+});
+```
+* **Q.ninvoke(object, methodName, ...args)** or **Q.nsend**
+
+調用物件中的方法 ， 可帶參數
+```javascript
+Q.ninvoke(redisClient, "get", "user:1:id").done(function (user) {
+});
+```
+* **promise.nodeify(callback)**
+
+如果 callback 是一個 function ，因為介面須符合```(err, result)```，如果不是 function 會 return 一個 promise
+```javascript
+function createUser(userName, userData, callback) {
+    return database.ensureUserNameNotTaken(userName)
+    .then(function () {
+        return database.saveUserData(userName, userData);
+    })
+    .nodeify(callback);
+}
+```
+* **deferred.makeNodeResolver()**
+
+返回一個 function 符合```(err, result)```介面
+```javascript
+var fsReadFile_makeNodeResolver = function(file,encoding){
+    var deferred = Q.defer();
+    FS.readFile(file,encoding,deferred.makeNodeResolver());
+    return deferred.promise;
+};
+ 
+fsReadFile_makeNodeResolver(file,encoding).then(function(result){
+    console.log("invoke in makeNodeResolver".red);
+    console.log(result.green);
+},function(error){
+    console.log(error.toString().red);
+});
+```
+
+### 錯誤處理
+
+* **Q.onerror** 設置一個錯誤訊號
+* **Q.getUnhandledReasons()** onRejected 之前的錯誤訊息(這應該是空的)
+* **Q.stopUnhandledRejectionTracking()** 有些錯誤沒有log出來，你可以查這裡
+* **Q.resetUnhandledRejections()** 清空錯誤的訊息紀錄
+
+### Other
+
+* **Q.isPromise(value)**
+* **Q.isPromiseAlike(value)**
+* **Q.promised(func)**
+* **Q.longStackSupport**
 
 ### 參考文
 
@@ -245,3 +393,5 @@ function run_error(error) {
 在Node.js 中用 Q 实现Promise – Callbacks之外的另一种选择](http://www.ituring.com.cn/article/54547)
 
 [How to actually use Q promise in node.js?](http://stackoverflow.com/questions/22678613/how-to-actually-use-q-promise-in-node-js)
+
+[Promise - Q函式庫](http://eddychang.me/javascript/228-promise-q)
