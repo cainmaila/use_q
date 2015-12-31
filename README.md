@@ -378,10 +378,10 @@ fsReadFile_makeNodeResolver(file,encoding).then(function(result){
 
 ### Other
 
-* **Q.isPromise(value)**
-* **Q.isPromiseAlike(value)**
-* **Q.promised(func)**
-* **Q.longStackSupport**
+* **Q.isPromise(value)** 是否為 Q Promise
+* **Q.isPromiseAlike(value)** 是否為 Promise (含有then 方法)
+* **Q.promised(func)** 把 function 變成一個 Promise (拋出 error 則為否定)
+* **Q.longStackSupport** 是否異步追蹤的開關
 
 ### 參考文
 
